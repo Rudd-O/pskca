@@ -44,6 +44,8 @@ class CA:
         self,
         ca_certificate: Certificate,
         ca_certificate_key: rsa.RSAPrivateKey,
+        time_limit: int = 60,
+        max_simultaneous_authorizations: int = 4,
     ):
         """
         Initializes the certificate authority.
@@ -57,8 +59,19 @@ class CA:
             ca_certificate_key: an RSAPrivateKey object that will be used
             to sign certificates that authenticated requestors present for
             signature.
+            time_limit: defaults to 60 seconds.  Any PSK added to the CA
+            will stop being valid after this time.  This is a convenient
+            security feature that allows PSK authorizations to be constrained
+            in duration.
+            max_simultaneous_authorizations: defaults to 4.  If more than this
+            number of PSKs are added, older ones will be purged.  This is
+            a convenient security feature that prevents resource exhaustion
+            by malicious attackers (e.g. calling code is influenced, perhaps
+            by oversight, to add a large number of PSKs to this object).
         """
-        self.psks: TimedDict[str, Optional[bytes]] = TimedDict(60, 4)
+        self.psks: TimedDict[str, Optional[bytes]] = TimedDict(
+            time_limit, max_simultaneous_authorizations
+        )
         self.ca_certificate = ca_certificate
         self.ca_certificate_key = ca_certificate_key
 
@@ -79,6 +92,8 @@ class CA:
         will be used to authenticate the requestor's certificate request.
 
         Instructions logged with this method are only valid for 60 seconds.
+
+        This method is thread-safe.
         """
         if psk is not None:
             check_psk(psk)
@@ -111,6 +126,8 @@ class CA:
         The caller may use the first certificate as its client identity
         certificate, and may use the second certificate to validate the
         identity of the servers it may connect with the first.
+
+        This method is thread-safe.
         """
         with self.psks:
             try:
