@@ -1,0 +1,10 @@
+*.egg-info
+*.dist-info
+dist
+build
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.rpm
+.tox
