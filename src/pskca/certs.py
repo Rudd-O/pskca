@@ -159,6 +159,7 @@ def issue_certificate(
     root_cert: Certificate,
     root_privkey: RSAPrivateKey,
     validity: datetime.timedelta = datetime.timedelta(days=3650),
+    ca: bool = False,
 ) -> Certificate:
     """
     Using a root CA certificate, issue a certificate based on the supplied
@@ -169,6 +170,8 @@ def issue_certificate(
         root_cert: the root certificate authorized to sign CSRs
         root_privkey: the private key of the root certificate
         validity: ten years by default, another timedelta if you specify it
+        ca: if True, the issued certificate is allowed to sign other
+        certificates
     """
     now = datetime.datetime.utcnow()
     expiry = datetime.datetime.utcnow() + validity
@@ -197,8 +200,13 @@ def issue_certificate(
         ),
         critical=False,
     )
-    cert = cert.add_extension(NON_CA_CONSTRAINTS, critical=False)
-    cert = cert.add_extension(NON_CA_USAGES, critical=False)
+
+    if ca:
+        cert = cert.add_extension(CA_CONSTRAINTS, critical=True)
+        cert = cert.add_extension(CA_USAGES, critical=False)
+    else:
+        cert = cert.add_extension(NON_CA_CONSTRAINTS, critical=False)
+        cert = cert.add_extension(NON_CA_USAGES, critical=False)
 
     return cert.sign(root_privkey, hashes.SHA256())
 
