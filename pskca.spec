@@ -16,7 +16,7 @@ URL:            https://github.com/Rudd-O/%{_name}
 Source:         %{url}/archive/v%{version}/%{_name}-%{version}.tar.gz
 
 BuildArch:      noarch
-BuildRequires:  python-rpm-macros, python-types-cryptography
+BuildRequires:  python3-devel, python-types-cryptography
 
 %global _description %{expand:
 This package implements certificate issuance based on pre-shared keys.
