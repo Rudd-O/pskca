@@ -49,6 +49,7 @@ NON_CA_CONSTRAINTS = x509.BasicConstraints(ca=False, path_length=None)
 
 def create_certificate_and_key(
     cn: Optional[str] = None,
+    org: str = "pskca",
     ca: bool = False,
 ) -> Tuple[Certificate, rsa.RSAPrivateKey]:
     """
@@ -56,8 +57,11 @@ def create_certificate_and_key(
 
     Parameters:
         cn: will be used as the common name in the certificate, if
-        present.  If absent, the hostname of the system where this
-        runs will be used.
+        present.  If absent / None, the hostname of the system where
+        this runs will be used.
+        org: will be used as the organization name in the certificate
+        if it's specified.  If absent, the organization name will
+        simply be "pskca".
         ca: if True, the certificate will be valid as a certificate
         authority allowed to issue and sign other certificates.
 
@@ -67,13 +71,13 @@ def create_certificate_and_key(
     # Create a key pair.
     k = rsa.generate_private_key(65537, 4096)
     p = k.public_key()
-    servername = socket.gethostname() if cn is None else cn
+    servername = cn if cn is not None else socket.gethostname()
 
     name = x509.Name(  # type: ignore
         [
             x509.NameAttribute(NameOID.COUNTRY_NAME, "XX"),
             x509.NameAttribute(NameOID.LOCALITY_NAME, "No city"),
-            x509.NameAttribute(NameOID.ORGANIZATION_NAME, "HASS MPRIS bridge"),
+            x509.NameAttribute(NameOID.ORGANIZATION_NAME, org),
             x509.NameAttribute(NameOID.COMMON_NAME, servername),
         ]
     )
