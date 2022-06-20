@@ -33,7 +33,7 @@ Steps:
 5. The client creates a certificate signing request.
    We supply a function create_certificate_signing_request(cn), but you
    can roll your own.
-5. The client calls Requestor.encode_csr() with the CSR, which returns
+5. The client calls Requestor.encrypt_csr() with the CSR, which returns
    an encrypted payload that only the server should be able to decrypt.
 6. The client transmits in cleartext the payload of the request to
    the server.  The payload is safe since it's encrypted with the PSK.
@@ -53,7 +53,7 @@ Steps:
 8. Upon successful issue_certificate(), the server must return the two
    payloads back to the client in cleartext form.  This payload is safe
    since it's encrypted with the PSK.
-9. The client recieves the payload, and calls Requestor.decode_reply(),
+9. The client recieves the payload, and calls Requestor.decrypt_reply(),
    with the encrypted client certificate and encrypted root certificate.
    * If successful, the ready-to-use client certificate, as well as the
      root of trust CA certificate, will be returned.
@@ -77,7 +77,7 @@ mutual root of trust.
 """
 
 
-__version__ = "0.1.5"
+__version__ = "0.1.6"
 
 from pskca.ca import CA
 from pskca.requestor import Requestor
@@ -122,9 +122,12 @@ def __test() -> None:
     C = CA(ca_cert, ca_key)
     C.add_psk(client_id, psk)
     R = Requestor(psk)
-    payload = R.encode_csr(client_csr)
-    enc_client_cert, enc_server_cert = C.issue_certificate(client_id, payload)
-    client_cert, server_cert = R.decode_reply(enc_client_cert, enc_server_cert)
+    payload = R.encrypt_csr(client_csr)
+    _, __, enc_client_cert, enc_server_cert = C.issue_certificate(
+        client_id,
+        payload,
+    )
+    client_cert, server_cert = R.decrypt_reply(enc_client_cert, enc_server_cert)
 
     print("Client certificate obtained: %s" % client_cert)
     print("Root of trust certificate obtained: %s" % server_cert)

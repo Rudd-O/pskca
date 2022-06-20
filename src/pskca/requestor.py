@@ -34,7 +34,7 @@ class Requestor(object):
         """
         self.psk = psk
 
-    def encode_csr(
+    def encrypt_csr(
         self,
         csr: CertificateSigningRequest,
     ) -> EncryptedCertificateRequest:
@@ -48,7 +48,7 @@ class Requestor(object):
         encrypted_csr = EncryptedCertificateRequest.encrypt(csr, self.psk)
         return encrypted_csr
 
-    def decode_reply(
+    def decrypt_reply(
         self,
         encrypted_issued_cert: EncryptedClientCertificate,
         encrypted_root_cert: EncryptedCertificateChain,
@@ -61,9 +61,17 @@ class Requestor(object):
 
         Parameters:
            encrypted_issued_cert: the encrypted client certificate part of the
-           IssueCertificateReply from the CA.
+           IssueCertificateReply from the CA.  If you have the bytes-serialized
+           object, you can create the right type thus:
+           ```
+           enc_cert = pskca.EncryptedClientCertificate(blob)
+           ```
            encrypted_root_cert: the encrypted root of trust certificate part of
-           the IssueCertificateReply from the CA.
+           the IssueCertificateReply from the CA.  If you have the bytes-
+           serialized object, you can creaty the right type thus
+           ```
+           enc_cert = pskca.EncryptedCertificateChain(blob)
+           ```
 
         Returns a tuple with:
         * the issued certificate for the client to identify to the server

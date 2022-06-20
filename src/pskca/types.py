@@ -60,7 +60,7 @@ class EncryptedPayload(bytes):
 
     def to_bytes(self) -> bytes:
         """
-        Returns self's representation as bytes (for type-checking purposes).
+        Returns self's representation as bytes.
         """
         return cast(bytes, self)
 
@@ -100,6 +100,13 @@ class EncryptedCertificateRequest(object):
         decrypted = self.payload.decrypt(psk)
         return load_pem_x509_csr(decrypted)
 
+    def to_bytes(self) -> bytes:
+        """
+        Returns an EncryptedCertificateRequest package which can then be sent
+        over the wire by calling its `.to_bytes()` method.
+        """
+        return self.payload.to_bytes()
+
 
 class EncryptedCertificate(object):
     def __init__(self, bytearray: bytes):
@@ -118,7 +125,8 @@ class EncryptedCertificate(object):
         Takes the certificate (which may be an issued certificate or a CA
         certificate), and encrypts it using the PSK.
 
-        Returns a bytes package which can safely be sent over the wire.
+        Returns a new EncryptedCertificate object, which can then be sent
+        over the wire by calling its `.to_bytes()` method.
         """
         cert_bytes = certificate.public_bytes(serialization.Encoding.PEM)
         return klass(
@@ -135,6 +143,13 @@ class EncryptedCertificate(object):
         decrypted = self.payload.decrypt(psk)
         return load_pem_x509_certificate(decrypted)
 
+    def to_bytes(self) -> bytes:
+        """
+        Returns self's representation as bytes.  Use this to serialize the
+        encrypted package to an array of bytes, for sending over the wire.
+        """
+        return self.payload.to_bytes()
+
 
 EncCertType = TypeVar("EncCertType", bound=EncryptedCertificate)
 
@@ -150,12 +165,12 @@ class EncryptedClientCertificate(EncryptedCertificate):
 
 class EncryptedCertificateChain(object):
     """
-    Represents a root of trust certificate corresponding to the CA's
-    root of trust.  It must be a list of certificates ordered by height
-    -- signers go before signees.  For more information on ordering, see
+    Represents a list of certificates that are the root of trust.  It must
+    be a list of certificates ordered by height -- signers go before signees.
+    For more information on ordering, see
     https://cheapsslsecurity.com/p/what-is-ssl-certificate-chain/
 
-    Clients will use this as their root of trust to do mutual TLS
+    Clients will use this chain as their root of trust to do mutual TLS
     authentication against servers whose certificates are secured by the CA.
     """
 
@@ -174,7 +189,8 @@ class EncryptedCertificateChain(object):
         """
         Takes the certificate chain and encrypts it using the PSK.
 
-        Returns a bytes package which can safely be sent over the wire.
+        Returns an EncryptedCertificateChain package which can safely be sent
+        over the wire by calling its `.to_bytes()` method.
         """
         cert_bytes: List[bytes] = []
         for cert in certificate_chain:
@@ -199,6 +215,13 @@ class EncryptedCertificateChain(object):
             loaded = load_pem_x509_certificate(start_line + single_pem_cert)
             certificates.append(loaded)
         return certificates
+
+    def to_bytes(self) -> bytes:
+        """
+        Returns a bytes-serialized array package which can safely be sent
+        over the wire.
+        """
+        return self.payload.to_bytes()
 
 
 EncChainType = TypeVar("EncChainType", bound=EncryptedCertificateChain)

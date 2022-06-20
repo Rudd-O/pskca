@@ -48,9 +48,16 @@ psk = os.urandom(32)
 C = pskca.CA(ca_cert, ca_key)
 C.add_psk(client_id, psk)
 R = pskca.Requestor(psk)
-payload = R.encode_csr(client_csr)
-enc_client_cert, enc_cert_chain = C.issue_certificate(client_id, payload)
-client_cert, enc_cert_chain = R.decode_reply(enc_client_cert, enc_cert_chain)
+payload = R.encrypt_csr(client_csr)
+# If you were sending the encrypted payload over the wire, you'd then
+# call .to_bytes() on the object resulting from encrypt_csr() call.
+_, __, enc_client_cert, enc_cert_chain = C.issue_certificate(client_id, payload)
+
+# If you received enc_client_cert and enc_cert_chain over the wire,
+# they'd be bytes, so you'd create the respective objects thus:
+# enc_client_cert = pskca.EncryptedClientCertificate(enc_client_cert)
+# enc_cert_chain = pskca.EncryptedCertificateChain(enc_cert_chain)
+client_cert, enc_cert_chain = R.decrypt_reply(enc_client_cert, enc_cert_chain)
 
 print("Client certificate obtained: %s" % client_cert)
 print("Root of trust certificate obtained: %s" % cert_chain)

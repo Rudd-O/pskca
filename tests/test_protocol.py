@@ -37,9 +37,12 @@ def test_authorized():
     C = pskca.CA(ca_cert, ca_key, [ca_cert])
     C.add_psk(client_id, psk)
     R = pskca.Requestor(psk)
-    payload = R.encode_csr(client_csr)
-    enc_client_cert, enc_server_cert = C.issue_certificate(client_id, payload)
-    client_cert, server_cert = R.decode_reply(enc_client_cert, enc_server_cert)
+    payload = R.encrypt_csr(client_csr)
+    _, __, enc_client_cert, enc_server_cert = C.issue_certificate(
+        client_id,
+        payload,
+    )
+    client_cert, server_cert = R.decrypt_reply(enc_client_cert, enc_server_cert)
 
 
 def test_pending():
@@ -48,9 +51,12 @@ def test_pending():
     C = pskca.CA(ca_cert, ca_key, [ca_cert])
     C.add_psk(client_id, None)
     R = pskca.Requestor(psk)
-    enc = R.encode_csr(client_csr)
+    enc = R.encrypt_csr(client_csr)
     with pytest.raises(pskca.Pending):
-        enc_client_cert, enc_server_cert = C.issue_certificate(client_id, enc)
+        _, __, enc_client_cert, enc_server_cert = C.issue_certificate(
+            client_id,
+            enc,
+        )
 
 
 def test_wrong_key():
@@ -60,9 +66,12 @@ def test_wrong_key():
     C = pskca.CA(ca_cert, ca_key, [ca_cert])
     C.add_psk(client_id, psk)
     R = pskca.Requestor(wrong_psk)
-    enc = R.encode_csr(client_csr)
+    enc = R.encrypt_csr(client_csr)
     with pytest.raises(pskca.CannotDecrypt):
-        enc_client_cert, enc_server_cert = C.issue_certificate(client_id, enc)
+        _, __, enc_client_cert, enc_server_cert = C.issue_certificate(
+            client_id,
+            enc,
+        )
 
 
 def test_unknown_client():
@@ -70,6 +79,9 @@ def test_unknown_client():
 
     C = pskca.CA(ca_cert, ca_key, [ca_cert])
     R = pskca.Requestor(psk)
-    enc = R.encode_csr(client_csr)
+    enc = R.encrypt_csr(client_csr)
     with pytest.raises(pskca.UnknownRequestor):
-        enc_client_cert, enc_server_cert = C.issue_certificate(client_id, enc)
+        _, __, enc_client_cert, enc_server_cert = C.issue_certificate(
+            client_id,
+            enc,
+        )

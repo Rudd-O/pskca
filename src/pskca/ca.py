@@ -116,7 +116,12 @@ class CA:
         self,
         requestor: str,
         request: EncryptedCertificateRequest,
-    ) -> Tuple[EncryptedClientCertificate, EncryptedCertificateChain]:
+    ) -> Tuple[
+        Certificate,
+        List[Certificate],
+        EncryptedClientCertificate,
+        EncryptedCertificateChain,
+    ]:  # noqa
         """
         Issues a certificate to a client, if and only if:
 
@@ -124,17 +129,21 @@ class CA:
         * the PSK is not None
         * the request can be decrypted using the peer's PSK
 
-        If the peer's PSK is None, an exception Pending is raised.
+        If the peer's PSK is None, an exception Pending is raised.  The client
+        should retry in a few seconds, because that means the client has not
+        yet been authorized with an add_psk(client, key).
 
         If the peer has no registered PSK, raises UnknownRequestor.
 
         If the request is well-formed but cannot be decrypted, an exception
         CannotDecrypt is raised.
 
-        If successful, it returns to the caller two items:
+        If successful, it returns to the caller four items:
 
-        1. a certificate, issued and signed by the CA, encrypted with the PSK
-        2. a root of trust certificate, encrypted with the PSK.
+        1. a certificate, issued and signed by the CA
+        2. the chain of trust associated (at initialization time) with this CA
+        3. the same certificate, encrypted with the PSK
+        4. a root of trust certificate, encrypted with the PSK.
 
         The caller may use the first certificate as its client identity
         certificate, and may use the second certificate to validate the
@@ -176,7 +185,7 @@ class CA:
             self.certificate_chain,
             psk,
         )
-        return enc_cert, enc_root
+        return cert, self.certificate_chain, enc_cert, enc_root
 
 
 __all__ = [
