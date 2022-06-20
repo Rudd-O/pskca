@@ -173,16 +173,19 @@ def issue_certificate(
     now = datetime.datetime.utcnow()
     expiry = datetime.datetime.utcnow() + validity
     SAN = csr.extensions.get_extension_for_class(x509.SubjectAlternativeName)
-    sanvalue = SAN.value
+    if SAN:
+        sanvalue = SAN.value
+    else:
+        sanvalue = None
 
-    cert = (
-        CertificateBuilder()
-        .subject_name(csr.subject)
-        .add_extension(
-            x509.SubjectAlternativeName([sanvalue]),
+    cert = CertificateBuilder().subject_name(csr.subject)
+    if sanvalue is not None:
+        cert = cert.add_extension(
+            sanvalue,
             critical=False,
         )
-        .issuer_name(root_cert.subject)
+    cert = (
+        cert.issuer_name(root_cert.subject)
         .public_key(csr.public_key())
         .serial_number(random_serial_number())
         .not_valid_before(now)
