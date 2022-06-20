@@ -127,7 +127,10 @@ def __test() -> None:
         client_id,
         payload,
     )
-    client_cert, server_cert = R.decrypt_reply(enc_client_cert, enc_server_cert)
+    client_cert, server_cert = R.decrypt_reply(
+        enc_client_cert,
+        enc_server_cert,
+    )
 
     print("Client certificate obtained: %s" % client_cert)
     print("Root of trust certificate obtained: %s" % server_cert)
