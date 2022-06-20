@@ -73,7 +73,7 @@ def create_certificate_and_key(
     p = k.public_key()
     servername = cn if cn is not None else socket.gethostname()
 
-    name = x509.Name(  # type: ignore
+    name = x509.Name(
         [
             x509.NameAttribute(NameOID.COUNTRY_NAME, "XX"),
             x509.NameAttribute(NameOID.LOCALITY_NAME, "No city"),
@@ -84,7 +84,7 @@ def create_certificate_and_key(
     now = datetime.datetime.utcnow()
     expiry = datetime.datetime.utcnow() + datetime.timedelta(days=3650)
     cert = (
-        CertificateBuilder()  # type: ignore
+        CertificateBuilder()
         .subject_name(name)
         .issuer_name(name)
         .serial_number(random_serial_number())
@@ -108,9 +108,7 @@ def create_certificate_and_key(
         cert = cert.add_extension(NON_CA_CONSTRAINTS, critical=False)
         cert = cert.add_extension(NON_CA_USAGES, critical=False)
 
-    cert = cert.sign(k, hashes.SHA256())
-
-    return cert, k
+    return cert.sign(k, hashes.SHA256()), k
 
 
 def create_certificate_signing_request(
@@ -131,9 +129,9 @@ def create_certificate_signing_request(
     k = rsa.generate_private_key(65537, 4096)
     # create a CSR (unsigned)
     c = (
-        x509.CertificateSigningRequestBuilder()  # type: ignore
+        x509.CertificateSigningRequestBuilder()
         .subject_name(
-            x509.Name(  # type: ignore
+            x509.Name(
                 [
                     # Provide various details about who we are.
                     x509.NameAttribute(NameOID.COMMON_NAME, servername),
@@ -178,10 +176,10 @@ def issue_certificate(
     sanvalue = SAN.value
 
     cert = (
-        CertificateBuilder()  # type: ignore
+        CertificateBuilder()
         .subject_name(csr.subject)
         .add_extension(
-            x509.SubjectAlternativeName(sanvalue),
+            x509.SubjectAlternativeName([sanvalue]),
             critical=False,
         )
         .issuer_name(root_cert.subject)
@@ -199,9 +197,7 @@ def issue_certificate(
     cert = cert.add_extension(NON_CA_CONSTRAINTS, critical=False)
     cert = cert.add_extension(NON_CA_USAGES, critical=False)
 
-    cert = cert.sign(root_privkey, hashes.SHA256())
-
-    return cast(Certificate, cert)
+    return cert.sign(root_privkey, hashes.SHA256())
 
 
 __all__ = [
