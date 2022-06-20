@@ -1,4 +1,4 @@
-from typing import Tuple, Optional, cast
+from typing import Tuple, Optional
 import datetime
 
 import socket
