@@ -1,5 +1,5 @@
 import secrets
-from typing import cast, TypeVar, Type
+from typing import cast, TypeVar, Type, List
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
@@ -148,14 +148,60 @@ class EncryptedClientCertificate(EncryptedCertificate):
     """
 
 
-class EncryptedRootCertificate(EncryptedCertificate):
+class EncryptedCertificateChain(object):
     """
     Represents a root of trust certificate corresponding to the CA's
-    root of trust.
+    root of trust.  It must be a list of certificates ordered by height
+    -- signers go before signees.  For more information on ordering, see
+    https://cheapsslsecurity.com/p/what-is-ssl-certificate-chain/
 
     Clients will use this as their root of trust to do mutual TLS
     authentication against servers whose certificates are secured by the CA.
     """
+
+    def __init__(self, bytearray: bytes) -> None:
+        """
+        Initializes an EncryptedCertificateChain based on a byte array.
+        """
+        self.payload = EncryptedPayload(bytearray)
+
+    @classmethod
+    def encrypt(
+        klass: Type["EncChainType"],
+        certificate_chain: List[Certificate],
+        psk: bytes,
+    ) -> "EncChainType":
+        """
+        Takes the certificate chain and encrypts it using the PSK.
+
+        Returns a bytes package which can safely be sent over the wire.
+        """
+        cert_bytes: List[bytes] = []
+        for cert in certificate_chain:
+            cert_bytes.append(cert.public_bytes(serialization.Encoding.PEM))
+        cert_bytes_string = b"\n".join(cert_bytes)
+        return klass(
+            EncryptedPayload.encrypt(
+                cert_bytes_string,
+                psk,
+            )
+        )
+
+    def decrypt(self, psk: bytes) -> List[Certificate]:
+        """
+        Decrypts the encrypted certificate signing request and returns it.
+        """
+        decrypted = self.payload.decrypt(psk)
+        start_line = b"-----BEGIN CERTIFICATE-----"
+        cert_slots = decrypted.split(start_line)
+        certificates: List[Certificate] = []
+        for single_pem_cert in cert_slots[1:]:
+            loaded = load_pem_x509_certificate(start_line + single_pem_cert)
+            certificates.append(loaded)
+        return certificates
+
+
+EncChainType = TypeVar("EncChainType", bound=EncryptedCertificateChain)
 
 
 __all__ = [
@@ -163,7 +209,7 @@ __all__ = [
     for x in [
         EncryptedCertificateRequest,
         EncryptedClientCertificate,
-        EncryptedRootCertificate,
+        EncryptedCertificateChain,
         check_psk,
     ]
 ]

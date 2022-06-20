@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, List
 
 from cryptography.x509 import (
     Certificate,
@@ -8,7 +8,7 @@ from pskca.ca import CannotDecrypt
 from pskca.types import (
     EncryptedCertificateRequest,
     EncryptedClientCertificate,
-    EncryptedRootCertificate,
+    EncryptedCertificateChain,
 )
 from cryptography.exceptions import InvalidKey, InvalidSignature, InvalidTag
 
@@ -51,8 +51,8 @@ class Requestor(object):
     def decode_reply(
         self,
         encrypted_issued_cert: EncryptedClientCertificate,
-        encrypted_root_cert: EncryptedRootCertificate,
-    ) -> Tuple[Certificate, Certificate]:
+        encrypted_root_cert: EncryptedCertificateChain,
+    ) -> Tuple[Certificate, List[Certificate]]:
         """
         Step 2 in the use of the Requestor class.  After obtaining a response
         from the server (which contains two fields, the issued certificate

@@ -1,9 +1,9 @@
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List
 
 from pskca.types import (
     EncryptedCertificateRequest,
     EncryptedClientCertificate,
-    EncryptedRootCertificate,
+    EncryptedCertificateChain,
     check_psk,
 )
 from pskca.util import TimedDict
@@ -44,6 +44,7 @@ class CA:
         self,
         ca_certificate: Certificate,
         ca_certificate_key: rsa.RSAPrivateKey,
+        certificate_chain: Optional[List[Certificate]] = None,
         time_limit: int = 60,
         max_simultaneous_authorizations: int = 4,
     ):
@@ -51,14 +52,23 @@ class CA:
         Initializes the certificate authority.
 
         Parameters:
-            ca_certificate: a Certificate object that will be sent to
-            successfully-authenticated requestors as the certificate root of
-            trust they must use to connect to authenticated services.  In
-            short -- requestors to whom this CA issues certificates must use
-            this certificate as their root of trust.
-            ca_certificate_key: an RSAPrivateKey object that will be used
-            to sign certificates that authenticated requestors present for
-            signature.
+            ca_certificate: a Certificate object that will be be used to sign
+            the certificates issued by this authority.  In general, the CA
+            certificate must either be included in the certificate chain
+            returned to clients (see below) or must be itself the certificate
+            chain sent back to them.
+            ca_certificate_key: the RSAPrivateKey object corresponding to the
+            CA certificate that will be used to sign certificates that
+            authenticated requestors present for signature.
+            certificate_chain: the chain of trust (certificates) sent to the
+            client (which must be used by the client) to authenticate the
+            server's certificate.  You have two options here:
+            a) if your authenticated service will reuse the CA certificate as
+               the server certificate, you can supply an one-element list of
+               [CA cert] -- this is the default if the list is empty;
+            b) if your authenticated service's certificate is signed by this
+               CA certificate, then you can supply a list of [CA certs] all
+               the way up to the root signing CA authority.
             time_limit: defaults to 60 seconds.  Any PSK added to the CA
             will stop being valid after this time.  This is a convenient
             security feature that allows PSK authorizations to be constrained
@@ -74,6 +84,9 @@ class CA:
         )
         self.ca_certificate = ca_certificate
         self.ca_certificate_key = ca_certificate_key
+        self.certificate_chain = (
+            certificate_chain if certificate_chain else [self.ca_certificate]
+        )
 
     def add_psk(self, requestor: str, psk: Optional[bytes]) -> None:
         """
@@ -103,7 +116,7 @@ class CA:
         self,
         requestor: str,
         request: EncryptedCertificateRequest,
-    ) -> Tuple[EncryptedClientCertificate, EncryptedRootCertificate]:
+    ) -> Tuple[EncryptedClientCertificate, EncryptedCertificateChain]:
         """
         Issues a certificate to a client, if and only if:
 
@@ -159,7 +172,10 @@ class CA:
         )
 
         enc_cert = EncryptedClientCertificate.encrypt(cert, psk)
-        enc_root = EncryptedRootCertificate.encrypt(self.ca_certificate, psk)
+        enc_root = EncryptedCertificateChain.encrypt(
+            self.certificate_chain,
+            psk,
+        )
         return enc_cert, enc_root
 
 

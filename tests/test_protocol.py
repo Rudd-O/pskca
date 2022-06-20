@@ -34,7 +34,7 @@ def init():
 def test_authorized():
     client_id, psk, ca_cert, ca_key, client_csr, client_key = init()
 
-    C = pskca.CA(ca_cert, ca_key)
+    C = pskca.CA(ca_cert, ca_key, [ca_cert])
     C.add_psk(client_id, psk)
     R = pskca.Requestor(psk)
     payload = R.encode_csr(client_csr)
@@ -45,7 +45,7 @@ def test_authorized():
 def test_pending():
     client_id, psk, ca_cert, ca_key, client_csr, client_key = init()
 
-    C = pskca.CA(ca_cert, ca_key)
+    C = pskca.CA(ca_cert, ca_key, [ca_cert])
     C.add_psk(client_id, None)
     R = pskca.Requestor(psk)
     enc = R.encode_csr(client_csr)
@@ -57,7 +57,7 @@ def test_wrong_key():
     client_id, psk, ca_cert, ca_key, client_csr, client_key = init()
     wrong_psk = os.urandom(32)
 
-    C = pskca.CA(ca_cert, ca_key)
+    C = pskca.CA(ca_cert, ca_key, [ca_cert])
     C.add_psk(client_id, psk)
     R = pskca.Requestor(wrong_psk)
     enc = R.encode_csr(client_csr)
@@ -68,7 +68,7 @@ def test_wrong_key():
 def test_unknown_client():
     client_id, psk, ca_cert, ca_key, client_csr, client_key = init()
 
-    C = pskca.CA(ca_cert, ca_key)
+    C = pskca.CA(ca_cert, ca_key, [ca_cert])
     R = pskca.Requestor(psk)
     enc = R.encode_csr(client_csr)
     with pytest.raises(pskca.UnknownRequestor):

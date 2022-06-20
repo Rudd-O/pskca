@@ -77,7 +77,7 @@ mutual root of trust.
 """
 
 
-__version__ = "0.1.4"
+__version__ = "0.1.5"
 
 from pskca.ca import CA
 from pskca.requestor import Requestor
@@ -90,7 +90,7 @@ from pskca.certs import (
 from pskca.types import (
     EncryptedCertificateRequest,
     EncryptedClientCertificate,
-    EncryptedRootCertificate,
+    EncryptedCertificateChain,
 )
 
 __all__ = [
@@ -101,7 +101,7 @@ __all__ = [
         UnknownRequestor,
         EncryptedCertificateRequest,
         EncryptedClientCertificate,
-        EncryptedRootCertificate,
+        EncryptedCertificateChain,
         CA,
         Requestor,
         create_certificate_and_key,
