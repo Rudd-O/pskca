@@ -27,6 +27,8 @@ class CannotDecrypt(Exception):
     """
     The CA knows about the requestor and its PSK, but could not decrypt the
     request from the requestor.
+
+    If used on a client: the client cannot decrypt the response from the CA.
     """
 
 
