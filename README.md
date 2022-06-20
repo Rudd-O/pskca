@@ -49,16 +49,16 @@ C = pskca.CA(ca_cert, ca_key)
 C.add_psk(client_id, psk)
 R = pskca.Requestor(psk)
 payload = R.encode_csr(client_csr)
-enc_client_cert, enc_server_cert = C.issue_certificate(client_id, payload)
-client_cert, server_cert = R.decode_reply(enc_client_cert, enc_server_cert)
+enc_client_cert, enc_cert_chain = C.issue_certificate(client_id, payload)
+client_cert, enc_cert_chain = R.decode_reply(enc_client_cert, enc_cert_chain)
 
 print("Client certificate obtained: %s" % client_cert)
-print("Root of trust certificate obtained: %s" % server_cert)
-print("CA certificate should match root of trust: %s" % ca_cert)
+print("Root of trust certificate obtained: %s" % cert_chain)
+print("CA certificate should be valid according to root of trust: %s" % ca_cert)
 
 # Client certificate obtained: <Certificate(subject=<Name(CN=projects)>, ...)>
-# Root of trust certificate obtained: <Certificate(subject=<Name(C=XX,...)>
-# CA certificate should match root of trust: <Certificate(subject=<Name(C=XX...)>
+# Root of trust certificate obtained: [<Certificate(subject=<Name(C=XX,...)>...]
+# CA certificate should be valid according to root of trust: <Certificate(subject=<Name(C=XX...)>
 ```
 
 You'll find more developer and implementation documentation in the
