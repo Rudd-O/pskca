@@ -77,7 +77,7 @@ mutual root of trust.
 """
 
 
-__version__ = "0.1.8"
+__version__ = "0.1.9"
 
 from pskca.ca import CA
 from pskca.requestor import Requestor

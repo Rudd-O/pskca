@@ -7,7 +7,7 @@
 %define mybuildnumber %{?build_number}%{?!build_number:1}
 
 Name:           python-%{_name}
-Version:        0.1.8
+Version:        0.1.9
 Release:        %{mybuildnumber}%{?dist}
 Summary:        Pre-shared key-based certificate authority and requestor
 
