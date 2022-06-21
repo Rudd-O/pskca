@@ -69,7 +69,7 @@ print("CA certificate should be valid according to root of trust: %s" % ca_cert)
 ```
 
 You'll find more developer and implementation documentation in the
-[module](src/pskca/__init__.py).
+[module](https://github.com/Rudd-O/pskca/blob/master/src/pskca/__init__.py).
 
 This package is distributed under the GNU Lesser General Public License v2.1.
 For relicensing, contact the package author.
