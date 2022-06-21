@@ -156,7 +156,8 @@ class CA:
         with self.psks:
             try:
                 psk = self.psks[requestor]
-                del self.psks[requestor]
+                if psk is not None:
+                    del self.psks[requestor]
             except KeyError:
                 try:
                     # Useful for testing.  Cannot be abused via
@@ -164,7 +165,6 @@ class CA:
                     # "*" and this value is not under the control
                     # of the peer.
                     psk = self.psks["*"]
-                    del self.psks["*"]
                 except KeyError:
                     raise UnknownRequestor(requestor)
 
