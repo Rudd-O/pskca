@@ -114,6 +114,17 @@ class CA:
             check_psk(psk)
         self.psks[requestor] = psk
 
+    def remove_psk(self, requestor: str) -> None:
+        """
+        Instructs this object to remove any pending PSK sent by the requestor,
+        thereby refusing further issue_certificate() requests from said
+        requestor.
+        """
+        try:
+            del self.psks[requestor]
+        except KeyError:
+            pass
+
     def issue_certificate(
         self,
         requestor: str,
