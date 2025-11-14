@@ -15,11 +15,11 @@ class TimedDict(dict[K, V]):
     def __enter__(self) -> None:
         self.lock.acquire()
 
-    def __exit__(  # type: ignore  # noqa
+    def __exit__(
         self,
-        unused_type,
-        unused_value,
-        unused_traceback,
+        unused_type: Any,
+        unused_value: Any,
+        unused_traceback: Any,
     ) -> None:
         self.lock.release()
 
@@ -31,7 +31,7 @@ class TimedDict(dict[K, V]):
             then, _ = cast(Tuple[float, V], v)
             if now - then > self.timeout:
                 del self[k]
-        if minusone and dict.__contains__(self, key):  # type: ignore
+        if minusone and dict.__contains__(self, key):  # type: ignore[arg-type, operator, unused-ignore]
             minusone = False
         size_limit = self.size_limit - (1 if minusone else 0)
         while len(self) > size_limit:
@@ -48,7 +48,7 @@ class TimedDict(dict[K, V]):
     def __contains__(self, item: K) -> bool:  # type: ignore
         with self.lock:
             self.__trim_timed_out_and_oversized(True)
-        return dict.__contains__(self, cast(Any, item))  # type: ignore
+        return dict.__contains__(self, cast(Any, item))  # type: ignore[arg-type, operator, unused-ignore]
 
     def __getitem__(self, key: K) -> V:
         with self.lock:

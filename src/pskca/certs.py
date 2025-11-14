@@ -196,7 +196,7 @@ def issue_certificate(
     )
     cert = cert.add_extension(
         x509.AuthorityKeyIdentifier.from_issuer_public_key(
-            root_cert.public_key(),
+            root_cert.public_key(), # type: ignore[arg-type, unused-ignore]
         ),
         critical=False,
     )
